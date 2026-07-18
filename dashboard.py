@@ -11,10 +11,10 @@ app = Flask(__name__)
 # ============================================================
 
 # Token de tu bot de Discord (para obtener estadísticas)
-BOT_TOKEN = os.environ.get('DISCORD_BOT_TOKEN', 'TU_TOKEN_AQUI')
+BOT_TOKEN = os.environ.get('MTUyNzc5MTc2NTA0MDY2NDY2Nw.GBAip7.PXwLTJjTui2VP-udRN1Vu5ztMBSxE2ufcHoyY8', 'MTUyNzc5MTc2NTA0MDY2NDY2Nw.GBAip7.PXwLTJjTui2VP-udRN1Vu5ztMBSxE2ufcHoyY8')
 
 # ID de tu bot (lo encuentras en Discord Developer Portal)
-BOT_CLIENT_ID = 'TU_CLIENT_ID_AQUI'
+BOT_CLIENT_ID = '1527791765040664667'
 
 # ============================================================
 # HTML COMPLETO DEL DASHBOARD
