@@ -1,20 +1,44 @@
-from flask import Flask, render_template_string, jsonify, request
-import requests
-import json
+from flask import Flask, render_template_string, jsonify
 import os
 from datetime import datetime
 
 app = Flask(__name__)
 
 # ============================================================
-# CONFIGURACIÓN - ¡CAMBIAR ESTOS VALORES!
+# CONFIGURACIÓN - TODOS LOS DATOS ESTÁTICOS
 # ============================================================
 
-# Token de tu bot de Discord (para obtener estadísticas)
-BOT_TOKEN = os.environ.get('MTUyNzc5MTc2NTA0MDY2NDY2Nw.GBAip7.PXwLTJjTui2VP-udRN1Vu5ztMBSxE2ufcHoyY8', 'MTUyNzc5MTc2NTA0MDY2NDY2Nw.GBAip7.PXwLTJjTui2VP-udRN1Vu5ztMBSxE2ufcHoyY8')
-
-# ID de tu bot (lo encuentras en Discord Developer Portal)
+# ID de tu bot (público, no es secreto)
 BOT_CLIENT_ID = '1527791765040664667'
+
+# Datos del bot (actualiza esto manualmente cuando quieras)
+BOT_INFO = {
+    'name': 'Economia Bot',
+    'client_id': BOT_CLIENT_ID,
+    'description': '🤖 Bot de economía completo con tienda, apuestas, sistema de pollos y más.',
+    'avatar_url': f'https://cdn.discordapp.com/app-icons/{BOT_CLIENT_ID}/tu_icono_aqui.png',  # Cambia por la URL de tu icono
+    'guild_count': 15,  # Actualiza este número manualmente
+    'user_count': 230,  # Actualiza este número manualmente
+    'command_count': 50,
+    'total_money': '1,250,000',
+    'uptime': '72h',
+    'active_users': 234,
+    'status': 'online',
+    'version': '2.0.0',
+    'last_update': datetime.now().strftime('%d/%m/%Y %H:%M'),
+    'commands_by_category': {
+        '💰 Economía': ['.bal', '.dep', '.with', '.transfer', '.daily', '.claim', '.loan', '.pay_loan'],
+        '🎮 Actividades': ['.work', '.slut', '.crime', '.rob'],
+        '🐔 Pollos': ['.bet', '.chicken', '.chicken_top'],
+        '🛍️ Tienda': ['.shop', '.buy', '.inventory', '.use'],
+        '🎰 Casino': ['.slots', '.dice', '.roulette', '.blackjack'],
+        '📊 Mercado': ['.crypto', '.stocks'],
+        '🎰 Sorteos': ['.raffle', '.join_raffle', '.auction'],
+        '🏆 Rankings': ['.top', '.leaderboard'],
+        '🛠️ Admin': ['.set-prefix', '.set-rewards', '.add-money', '.remove-money', '.role-income'],
+        '👤 Perfil': ['.profile', '.set_profile']
+    }
+}
 
 # ============================================================
 # HTML COMPLETO DEL DASHBOARD
@@ -26,7 +50,7 @@ HTML_TEMPLATE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🤖 Dashboard - Economia Bot</title>
+    <title>🤖 Dashboard - {{ bot_info.name }}</title>
     <style>
         * {
             margin: 0;
@@ -47,7 +71,6 @@ HTML_TEMPLATE = """
             margin: 0 auto;
         }
         
-        /* HEADER */
         .header {
             text-align: center;
             padding: 40px 0;
@@ -80,7 +103,6 @@ HTML_TEMPLATE = """
             display: block;
         }
         
-        /* BOTONES DE INVITACIÓN */
         .invite-section {
             text-align: center;
             margin: 30px 0;
@@ -129,7 +151,6 @@ HTML_TEMPLATE = """
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
         }
         
-        /* ESTADÍSTICAS */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -167,7 +188,6 @@ HTML_TEMPLATE = """
             margin-top: 5px;
         }
         
-        /* COMANDOS */
         .commands-section {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 20px;
@@ -206,7 +226,6 @@ HTML_TEMPLATE = """
             font-family: 'Courier New', monospace;
         }
         
-        /* FOOTER */
         .footer {
             text-align: center;
             padding: 30px;
@@ -222,27 +241,6 @@ HTML_TEMPLATE = """
         .status-offline {
             color: #ED4245;
         }
-        
-        /* LOADING */
-        .loading {
-            text-align: center;
-            padding: 20px;
-        }
-        
-        .spinner {
-            border: 4px solid rgba(255, 255, 255, 0.1);
-            border-top: 4px solid #ffd200;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
     </style>
 </head>
 <body>
@@ -253,11 +251,9 @@ HTML_TEMPLATE = """
             <img src="{{ bot_info.avatar_url }}" alt="Bot Avatar" class="bot-avatar">
             {% endif %}
             <h1>🤖 {{ bot_info.name }}</h1>
-            <p>{{ bot_info.description or 'Bot de economía completo con tienda, apuestas y más.' }}</p>
+            <p>{{ bot_info.description }}</p>
             <p style="margin-top: 10px;">
-                <span class="{% if bot_info.status == 'online' %}status-online{% else %}status-offline{% endif %}">
-                    ● {{ bot_info.status|capitalize }}
-                </span>
+                <span class="status-online">● Online</span>
                 &nbsp;|&nbsp; 🆔 {{ bot_info.client_id }}
             </p>
         </div>
@@ -268,7 +264,7 @@ HTML_TEMPLATE = """
                target="_blank" class="btn btn-invite">
                 ➕ Invitar Bot
             </a>
-            <a href="https://discord.gg/tu-servidor-soporte" target="_blank" class="btn btn-support">
+            <a href="https://discord.gg/tu-servidor" target="_blank" class="btn btn-support">
                 🆘 Servidor Soporte
             </a>
             <a href="https://github.com/tu-usuario/tu-repo" target="_blank" class="btn btn-github">
@@ -280,32 +276,32 @@ HTML_TEMPLATE = """
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-icon">🏛️</div>
-                <div class="stat-number">{{ bot_info.guild_count or 0 }}</div>
+                <div class="stat-number">{{ bot_info.guild_count }}</div>
                 <div class="stat-label">Servidores</div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon">👥</div>
-                <div class="stat-number">{{ bot_info.user_count or 0 }}</div>
+                <div class="stat-number">{{ bot_info.user_count }}</div>
                 <div class="stat-label">Usuarios</div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon">📊</div>
-                <div class="stat-number">{{ bot_info.command_count or 0 }}</div>
+                <div class="stat-number">{{ bot_info.command_count }}</div>
                 <div class="stat-label">Comandos</div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon">💰</div>
-                <div class="stat-number">{{ bot_info.total_money or 0 }}</div>
+                <div class="stat-number">{{ bot_info.total_money }}</div>
                 <div class="stat-label">Economía Total</div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon">🕒</div>
-                <div class="stat-number">{{ bot_info.uptime or '0h' }}</div>
+                <div class="stat-number">{{ bot_info.uptime }}</div>
                 <div class="stat-label">Tiempo Activo</div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon">🎮</div>
-                <div class="stat-number">{{ bot_info.active_users or 0 }}</div>
+                <div class="stat-number">{{ bot_info.active_users }}</div>
                 <div class="stat-label">Usuarios Activos</div>
             </div>
         </div>
@@ -326,111 +322,13 @@ HTML_TEMPLATE = """
         
         <!-- FOOTER -->
         <div class="footer">
-            <p>🤖 {{ bot_info.name }} v{{ bot_info.version or '2.0.0' }}</p>
-            <p style="font-size: 0.8em;">Última actualización: {{ bot_info.last_update or 'N/A' }}</p>
+            <p>🤖 {{ bot_info.name }} v{{ bot_info.version }}</p>
+            <p style="font-size: 0.8em;">Última actualización: {{ bot_info.last_update }}</p>
         </div>
     </div>
 </body>
 </html>
 """
-
-# ============================================================
-# FUNCIONES PARA OBTENER DATOS DEL BOT
-# ============================================================
-
-def get_bot_info():
-    """Obtiene información del bot desde Discord API"""
-    try:
-        # Obtener info básica del bot
-        headers = {'Authorization': f'Bot {BOT_TOKEN}'}
-        
-        # Información del bot
-        bot_response = requests.get(
-            f'https://discord.com/api/v10/applications/{BOT_CLIENT_ID}',
-            headers=headers
-        )
-        
-        if bot_response.status_code == 200:
-            bot_data = bot_response.json()
-        else:
-            bot_data = {}
-        
-        # Información de estadísticas (servidores)
-        if BOT_TOKEN != 'TU_TOKEN_AQUI':
-            # Si tenemos token válido, obtener info de servidores
-            guilds_response = requests.get(
-                'https://discord.com/api/v10/users/@me/guilds',
-                headers=headers
-            )
-            
-            if guilds_response.status_code == 200:
-                guilds = guilds_response.json()
-                guild_count = len(guilds)
-                user_count = sum(1 for g in guilds if g.get('approximate_member_count'))
-            else:
-                guild_count = 0
-                user_count = 0
-        else:
-            guild_count = 0
-            user_count = 0
-        
-        return {
-            'name': bot_data.get('name', 'Economia Bot'),
-            'client_id': BOT_CLIENT_ID,
-            'description': bot_data.get('description', 'Bot de economía completo con tienda, apuestas y más.'),
-            'avatar_url': f"https://cdn.discordapp.com/app-icons/{BOT_CLIENT_ID}/{bot_data.get('icon', '')}.png" if bot_data.get('icon') else None,
-            'guild_count': guild_count,
-            'user_count': user_count * 20,  # Estimación
-            'command_count': 50,  # Número total de comandos
-            'total_money': 1250000,  # Economía total simulada
-            'uptime': '72h',
-            'active_users': 234,
-            'status': 'online',
-            'version': '2.0.0',
-            'last_update': datetime.now().strftime('%d/%m/%Y %H:%M'),
-            'commands_by_category': {
-                '💰 Economía': ['.bal', '.dep', '.with', '.transfer', '.daily', '.claim'],
-                '🎮 Actividades': ['.work', '.slut', '.crime', '.rob'],
-                '🐔 Pollos': ['.bet', '.chicken', '.chicken_top'],
-                '🛍️ Tienda': ['.shop', '.buy', '.inventory', '.use'],
-                '🎰 Casino': ['.slots', '.dice', '.roulette', '.blackjack'],
-                '📊 Mercado': ['.crypto', '.stocks', '.loan', '.pay_loan'],
-                '🎰 Sorteos': ['.raffle', '.join_raffle', '.auction'],
-                '🏆 Rankings': ['.top', '.leaderboard'],
-                '🛠️ Admin': ['.set-prefix', '.set-rewards', '.add-money', '.remove-money'],
-                '👤 Perfil': ['.profile', '.set_profile']
-            }
-        }
-        
-    except Exception as e:
-        # Si hay error, devolver datos de muestra
-        return {
-            'name': 'Economia Bot',
-            'client_id': BOT_CLIENT_ID,
-            'description': 'Bot de economía completo con tienda, apuestas y más.',
-            'avatar_url': None,
-            'guild_count': 0,
-            'user_count': 0,
-            'command_count': 50,
-            'total_money': 1250000,
-            'uptime': '72h',
-            'active_users': 234,
-            'status': 'online',
-            'version': '2.0.0',
-            'last_update': datetime.now().strftime('%d/%m/%Y %H:%M'),
-            'commands_by_category': {
-                '💰 Economía': ['.bal', '.dep', '.with', '.transfer', '.daily', '.claim'],
-                '🎮 Actividades': ['.work', '.slut', '.crime', '.rob'],
-                '🐔 Pollos': ['.bet', '.chicken', '.chicken_top'],
-                '🛍️ Tienda': ['.shop', '.buy', '.inventory', '.use'],
-                '🎰 Casino': ['.slots', '.dice', '.roulette', '.blackjack'],
-                '📊 Mercado': ['.crypto', '.stocks', '.loan', '.pay_loan'],
-                '🎰 Sorteos': ['.raffle', '.join_raffle', '.auction'],
-                '🏆 Rankings': ['.top', '.leaderboard'],
-                '🛠️ Admin': ['.set-prefix', '.set-rewards', '.add-money', '.remove-money'],
-                '👤 Perfil': ['.profile', '.set_profile']
-            }
-        }
 
 # ============================================================
 # RUTAS DE FLASK
@@ -439,14 +337,12 @@ def get_bot_info():
 @app.route('/')
 def home():
     """Página principal del dashboard"""
-    bot_info = get_bot_info()
-    return render_template_string(HTML_TEMPLATE, bot_info=bot_info)
+    return render_template_string(HTML_TEMPLATE, bot_info=BOT_INFO)
 
 @app.route('/api/stats')
 def api_stats():
     """API para obtener estadísticas en JSON"""
-    bot_info = get_bot_info()
-    return jsonify(bot_info)
+    return jsonify(BOT_INFO)
 
 @app.route('/health')
 def health():
