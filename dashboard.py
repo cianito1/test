@@ -479,7 +479,7 @@ def get_comandos_por_categoria(prefijo):
 
 @app.route('/')
 def home():
-    """Página principal con datos REALES"""
+    """Página principal del dashboard"""
     comandos = get_comandos_con_prefijo(PREFIJO)
     categorias = get_comandos_por_categoria(PREFIJO)
     
@@ -1222,36 +1222,6 @@ def get_comandos_por_categoria(prefijo):
         categorias[cat].append(cmd)
     
     return categorias
-
-# ============================================================
-# RUTAS DE FLASK
-# ============================================================
-
-@app.route('/')
-def home():
-    """Página principal del dashboard"""
-    comandos = get_comandos_con_prefijo(PREFIJO)
-    categorias = get_comandos_por_categoria(PREFIJO)
-    
-    bot_info = {
-        'name': DATOS_REALES['nombre'],
-        'client_id': BOT_CLIENT_ID,
-        'description': '🤖 Bot de economía completo con tienda, apuestas, sistema de pollos y más.',
-        'guild_count': DATOS_REALES['servidores'],
-        'user_count': DATOS_REALES['usuarios'],
-        'command_count': len(comandos),
-        'total_money': f"{DATOS_REALES['economia_total']:,}".replace(',', '.'),
-        'uptime': DATOS_REALES['tiempo_activo'],
-        'active_users': DATOS_REALES['usuarios_activos'],
-        'status': 'online',
-        'version': DATOS_REALES['version'],
-        'prefijo': PREFIJO,
-        'last_update': datetime.now().strftime('%d/%m/%Y %H:%M'),
-        'commands_by_category': categorias,
-        'comandos_help': comandos
-    }
-    
-    return render_template_string(HTML_TEMPLATE, bot_info=bot_info)
 
 @app.route('/api/stats')
 def api_stats():
